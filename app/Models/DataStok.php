@@ -13,7 +13,6 @@ class DataStok extends Model
     protected $fillable = [
         'merk',
         'stok',
-        'permintaan',
         'penjualan',
         'kategori_stok',
     ];

@@ -33,7 +33,6 @@
                         <th width="50">No</th>
                         <th>Merk</th>
                         <th>Stok</th>
-                        <th>Permintaan</th>
                         <th>Penjualan</th>
                         <th>Kategori</th>
                         <th width="150">Aksi</th>
@@ -45,7 +44,6 @@
                         <td>{{ $index + 1 }}</td>
                         <td>{{ $data->merk }}</td>
                         <td>{{ str_replace('.', ',', $data->stok) }}</td>
-                        <td>{{ str_replace('.', ',', $data->permintaan) }}</td>
                         <td>{{ str_replace('.', ',', $data->penjualan) }}</td>
                         <td>
                             @if($data->kategori_stok == 'Banyak')
@@ -61,7 +59,6 @@
                                     data-id="{{ $data->id_stok }}"
                                     data-merk="{{ $data->merk }}"
                                     data-stok="{{ $data->stok }}"
-                                    data-permintaan="{{ $data->permintaan }}"
                                     data-penjualan="{{ $data->penjualan }}"
                                     data-kategori="{{ $data->kategori_stok }}">
                                 <i class="fas fa-edit"></i>
@@ -101,11 +98,7 @@
                         <input type="text" class="form-control" id="stok" name="stok" required placeholder="Contoh: 50,6 atau -10,5">
                         <small class="text-muted">Gunakan koma untuk desimal. Angka negatif diperbolehkan.</small>
                     </div>
-                    <div class="mb-3">
-                        <label for="permintaan" class="form-label">Permintaan</label>
-                        <input type="text" class="form-control" id="permintaan" name="permintaan" required placeholder="Contoh: 100,75 atau -5">
-                        <small class="text-muted">Gunakan koma untuk desimal. Angka negatif diperbolehkan.</small>
-                    </div>
+
                     <div class="mb-3">
                         <label for="penjualan" class="form-label">Penjualan</label>
                         <input type="text" class="form-control" id="penjualan" name="penjualan" required placeholder="Contoh: 75,25 atau -3,5">
@@ -150,11 +143,7 @@
                         <input type="text" class="form-control" id="edit_stok" name="stok" required placeholder="Contoh: 50,6 atau -10,5">
                         <small class="text-muted">Gunakan koma untuk desimal. Angka negatif diperbolehkan.</small>
                     </div>
-                    <div class="mb-3">
-                        <label for="edit_permintaan" class="form-label">Permintaan</label>
-                        <input type="text" class="form-control" id="edit_permintaan" name="permintaan" required placeholder="Contoh: 100,75 atau -5">
-                        <small class="text-muted">Gunakan koma untuk desimal. Angka negatif diperbolehkan.</small>
-                    </div>
+
                     <div class="mb-3">
                         <label for="edit_penjualan" class="form-label">Penjualan</label>
                         <input type="text" class="form-control" id="edit_penjualan" name="penjualan" required placeholder="Contoh: 75,25 atau -3,5">
@@ -213,15 +202,15 @@ $(document).ready(function() {
         }
     }
 
-    // Terapkan validasi pada input stok, permintaan, penjualan
-    $('#stok, #permintaan, #penjualan, #edit_stok, #edit_permintaan, #edit_penjualan').on('input', function() {
+    // Terapkan validasi pada input stok, penjualan
+    $('#stok, #penjualan, #edit_stok, #edit_penjualan').on('input', function() {
         validateNumericInput(this);
     });
 
     // Tambah Data
     $('#formTambah').on('submit', function(e) {
         e.preventDefault();
-        
+
         // Show loading
         Swal.fire({
             title: 'Menyimpan...',
@@ -265,7 +254,6 @@ $(document).ready(function() {
         const id = $(this).data('id');
         const merk = $(this).data('merk');
         const stok = $(this).data('stok');
-        const permintaan = $(this).data('permintaan');
         const penjualan = $(this).data('penjualan');
         const kategori = $(this).data('kategori');
 
@@ -273,7 +261,6 @@ $(document).ready(function() {
         $('#edit_merk').val(merk);
         // Format nilai dengan koma untuk desimal
         $('#edit_stok').val(String(stok).replace('.', ','));
-        $('#edit_permintaan').val(String(permintaan).replace('.', ','));
         $('#edit_penjualan').val(String(penjualan).replace('.', ','));
         $('#edit_kategori_stok').val(kategori);
 
@@ -283,7 +270,7 @@ $(document).ready(function() {
     $('#formEdit').on('submit', function(e) {
         e.preventDefault();
         const id = $('#edit_id').val();
-        
+
         // Show loading
         Swal.fire({
             title: 'Memperbarui...',
@@ -324,7 +311,7 @@ $(document).ready(function() {
     // Delete Data
     $(document).on('click', '.btn-delete', function() {
         const id = $(this).data('id');
-        
+
         Swal.fire({
             title: 'Apakah Anda yakin?',
             text: "Data akan dihapus permanen!",

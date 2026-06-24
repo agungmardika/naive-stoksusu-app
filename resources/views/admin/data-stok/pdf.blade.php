@@ -183,7 +183,6 @@
                 <th style="width: 5%;">No</th>
                 <th style="width: 20%;">Merk</th>
                 <th style="width: 15%;">Stok</th>
-                <th style="width: 15%;">Permintaan</th>
                 <th style="width: 15%;">Penjualan</th>
                 <th style="width: 15%;">Kategori</th>
                 <th style="width: 15%;">Tanggal</th>
@@ -195,7 +194,6 @@
                 <td>{{ $index + 1 }}</td>
                 <td>{{ $data->merk }}</td>
                 <td>{{ str_replace('.', ',', $data->stok) }}</td>
-                <td>{{ str_replace('.', ',', $data->permintaan) }}</td>
                 <td>{{ str_replace('.', ',', $data->penjualan) }}</td>
                 <td>
                     @if($data->kategori_stok == 'Banyak')
@@ -242,11 +240,7 @@
                     <td>{{ str_replace('.', ',', $stat['mean_stok']) }}</td>
                     <td>{{ str_replace('.', ',', $stat['std_stok']) }}</td>
                 </tr>
-                <tr>
-                    <td><strong>Permintaan</strong></td>
-                    <td>{{ str_replace('.', ',', $stat['mean_permintaan']) }}</td>
-                    <td>{{ str_replace('.', ',', $stat['std_permintaan']) }}</td>
-                </tr>
+
                 <tr>
                     <td><strong>Penjualan</strong></td>
                     <td>{{ str_replace('.', ',', $stat['mean_penjualan']) }}</td>
@@ -270,7 +264,7 @@
     <div class="calculation-section">
         <h3>3. Posterior Probability</h3>
         <p>Untuk menghitung prediksi kategori, dihitung dengan rumus:</p>
-        <p><strong>P(Kategori|Data) = P(Kategori) × P(Stok|Kategori) × P(Permintaan|Kategori) × P(Penjualan|Kategori)</strong></p>
+        <p><strong>P(Kategori|Data) = P(Kategori) × P(Stok|Kategori) × P(Penjualan|Kategori)</strong></p>
         <p>Kategori dengan nilai Posterior Probability tertinggi adalah hasil prediksi.</p>
     </div>
     @endif

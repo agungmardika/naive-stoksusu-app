@@ -103,7 +103,7 @@
                         <span class="fw-bold">{{ $kategoriBanyak }}</span>
                     </div>
                     <div class="progress mb-3" style="height: 25px;">
-                        <div class="progress-bar bg-success" role="progressbar" 
+                        <div class="progress-bar bg-success" role="progressbar"
                              style="width: {{ $totalData > 0 ? ($kategoriBanyak/$totalData)*100 : 0 }}%">
                             {{ $totalData > 0 ? number_format(($kategoriBanyak/$totalData)*100, 1) : 0 }}%
                         </div>
@@ -116,7 +116,7 @@
                         <span class="fw-bold">{{ $kategoriSedang }}</span>
                     </div>
                     <div class="progress mb-3" style="height: 25px;">
-                        <div class="progress-bar bg-warning" role="progressbar" 
+                        <div class="progress-bar bg-warning" role="progressbar"
                              style="width: {{ $totalData > 0 ? ($kategoriSedang/$totalData)*100 : 0 }}%">
                             {{ $totalData > 0 ? number_format(($kategoriSedang/$totalData)*100, 1) : 0 }}%
                         </div>
@@ -129,7 +129,7 @@
                         <span class="fw-bold">{{ $kategoriSedikit }}</span>
                     </div>
                     <div class="progress" style="height: 25px;">
-                        <div class="progress-bar bg-danger" role="progressbar" 
+                        <div class="progress-bar bg-danger" role="progressbar"
                              style="width: {{ $totalData > 0 ? ($kategoriSedikit/$totalData)*100 : 0 }}%">
                             {{ $totalData > 0 ? number_format(($kategoriSedikit/$totalData)*100, 1) : 0 }}%
                         </div>
@@ -148,9 +148,9 @@
                 <h5 class="mb-3">Algoritma Naive Bayes</h5>
                 <p class="text-justify">
                     Sistem ini menggunakan algoritma Naive Bayes untuk memprediksi kategori stok susu
-                    berdasarkan data historis penjualan, permintaan, dan stok yang tersedia.
+                    berdasarkan data historis penjualan, dan stok yang tersedia.
                 </p>
-                
+
                 <h6 class="mt-4 mb-2">Fitur Sistem:</h6>
                 <ul>
                     <li>Manajemen data stok susu</li>

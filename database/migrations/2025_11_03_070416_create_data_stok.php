@@ -12,7 +12,6 @@ return new class extends Migration
             $table->increments('id_stok')->primary();
             $table->string('merk', 100);
             $table->integer('stok', false, true)->length(12);
-            $table->integer('permintaan', false, true)->length(10);
             $table->integer('penjualan', false, true)->length(10);
             $table->enum('kategori_stok', ['Sedang', 'Banyak', 'Sedikit', 'Tidak Ada']);
             $table->timestamps();

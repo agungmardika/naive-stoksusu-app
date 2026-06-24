@@ -32,65 +32,76 @@ class PrediksiController extends Controller
         $request->validate([
             'merk' => 'nullable|string|max:100',
             'stok' => 'required|numeric',
-            'permintaan' => 'required|numeric',
             'penjualan' => 'required|numeric',
         ]);
 
         try {
-            // Cek apakah sudah ada data training
-            $likelihoodCount = DataLikelihood::count();
-            if ($likelihoodCount == 0) {
+
+            // Cek apakah sudah training
+            if (DataLikelihood::count() == 0 || DataProbabilitas::count() == 0) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Belum ada data training! Lakukan training terlebih dahulu.'
+                    'message' => 'Belum ada data training! Silakan lakukan training terlebih dahulu.'
                 ], 400);
             }
 
-            // Konversi koma ke titik untuk desimal
             $stok = $this->convertToDecimal($request->stok);
-            $permintaan = $this->convertToDecimal($request->permintaan);
             $penjualan = $this->convertToDecimal($request->penjualan);
 
             $kategori = ['Banyak', 'Sedikit', 'Sedang'];
             $probabilities = [];
 
             foreach ($kategori as $kat) {
-                // Ambil data likelihood untuk kategori ini
+
                 $likelihood = DataLikelihood::where('kategori', $kat)->first();
-                
-                // Ambil prior probability
                 $prior = DataProbabilitas::where('kategori', $kat)->first();
-                
-                if ($likelihood && $prior) {
-                    // Hitung probability menggunakan Gaussian Naive Bayes (simplified)
-                    $probStok = $this->calculateProbability($stok, $likelihood->stok_li);
-                    $probPermintaan = $this->calculateProbability($permintaan, $likelihood->permintaan_li);
-                    $probPenjualan = $this->calculateProbability($penjualan, $likelihood->penjualan_li);
-                    
-                    // Hitung posterior probability
-                    $posterior = $prior->probability * $probStok * $probPermintaan * $probPenjualan;
-                    
-                    $probabilities[$kat] = $posterior;
+
+                if (!$likelihood || !$prior) {
+                    continue;
                 }
+
+                $probStok = $this->gaussianProbability(
+                    $stok,
+                    $likelihood->stok_li,
+                    $likelihood->stok_std
+                );
+
+
+
+                $probPenjualan = $this->gaussianProbability(
+                    $penjualan,
+                    $likelihood->penjualan_li,
+                    $likelihood->penjualan_std
+                );
+
+                $posterior =
+                    $prior->probability *
+                    $probStok *
+                    $probPenjualan;
+
+                $probabilities[$kat] = $posterior;
             }
 
-            // Cari kategori dengan probability tertinggi
+            if (empty($probabilities)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data probabilitas tidak ditemukan.'
+                ], 400);
+            }
+
             arsort($probabilities);
+
             $hasilPrediksi = array_key_first($probabilities);
 
-            // Simpan ke database
             DB::beginTransaction();
-            
-            // Simpan data stok terlebih dahulu
+
             $dataStok = DataStok::create([
-                'merk' => $request->merk ?? 'Prediksi-' . date('YmdHis'),
+                'merk' => $request->merk ?? ('Prediksi-' . date('YmdHis')),
                 'stok' => $stok,
-                'permintaan' => $permintaan,
                 'penjualan' => $penjualan,
                 'kategori_stok' => $hasilPrediksi,
             ]);
 
-            // Simpan hasil prediksi
             DataPrediksi::create([
                 'id_stok' => $dataStok->id_stok,
                 'prediksi' => $hasilPrediksi,
@@ -104,11 +115,15 @@ class PrediksiController extends Controller
                 'data' => [
                     'prediksi' => $hasilPrediksi,
                     'probabilities' => $probabilities,
+                    'rekomendasi' => $this->getRecommendation($hasilPrediksi),
                 ]
             ]);
-
         } catch (\Exception $e) {
-            DB::rollback();
+
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal melakukan prediksi: ' . $e->getMessage()
@@ -116,11 +131,29 @@ class PrediksiController extends Controller
         }
     }
 
+
     private function calculateProbability($value, $mean, $stdDev = 10)
     {
         // Simplified probability calculation
         $diff = abs($value - $mean);
         return 1 / (1 + $diff / 100); // Simple probability based on difference
+    }
+
+    private function getRecommendation($kategori)
+    {
+        switch ($kategori) {
+
+            case 'Sedikit':
+                return 'Karena hasil prediksi stok adalah Sedikit, toko disarankan menambah jumlah stok agar ketersediaan produk tetap terjaga.';
+
+            case 'Sedang':
+                return 'Karena hasil prediksi stok adalah Sedang, toko disarankan mempertahankan jumlah stok pada kondisi saat ini.';
+
+            case 'Banyak':
+                return 'Karena hasil prediksi stok adalah Banyak, toko disarankan mengurangi jumlah pemesanan stok agar tidak terjadi penumpukan barang dan risiko kedaluwarsa.';
+        }
+
+        return '-';
     }
 
     public function destroy($id)
@@ -139,6 +172,22 @@ class PrediksiController extends Controller
                 'message' => 'Gagal menghapus data prediksi!'
             ], 500);
         }
+    }
+
+    private function gaussianProbability($x, $mean, $stdDev)
+    {
+        if ($stdDev <= 0) {
+            $stdDev = 1;
+        }
+
+        $exponent = exp(
+            -pow(($x - $mean), 2)
+                /
+                (2 * pow($stdDev, 2))
+        );
+
+        return (1 / (sqrt(2 * pi()) * $stdDev))
+            * $exponent;
     }
 
     /**

@@ -30,7 +30,6 @@ class DatabaseSeeder extends Seeder
             DataStok::create([
                 'merk' => rand(1, 20),
                 'stok' => rand(10, 200),
-                'permintaan' => rand(10, 200),
                 'penjualan' => rand(10, 200),
                 'kategori_stok' => ['sedang', 'banyak', 'sedikit'][array_rand(['sedang', 'banyak', 'sedikit'])]
             ]);

@@ -14,10 +14,8 @@ class DataLikelihood extends Model
         'id_stok',
         'kategori',
         'stok_li',
-        'permintaan_li',
         'penjualan_li',
         'stok_std',
-        'permintaan_std',
         'penjualan_std',
     ];
 

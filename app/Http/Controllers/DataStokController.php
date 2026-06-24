@@ -28,7 +28,6 @@ class DataStokController extends Controller
         $request->validate([
             'merk' => 'required|string|max:100',
             'stok' => 'required|numeric',
-            'permintaan' => 'required|numeric',
             'penjualan' => 'required|numeric',
             'kategori_stok' => 'required|in:Banyak,Sedikit,Sedang',
         ]);
@@ -37,7 +36,6 @@ class DataStokController extends Controller
             // Konversi koma ke titik untuk desimal
             $data = $request->all();
             $data['stok'] = $this->convertToDecimal($request->stok);
-            $data['permintaan'] = $this->convertToDecimal($request->permintaan);
             $data['penjualan'] = $this->convertToDecimal($request->penjualan);
 
             DataStok::create($data);
@@ -58,7 +56,6 @@ class DataStokController extends Controller
         $request->validate([
             'merk' => 'required|string|max:100',
             'stok' => 'required|numeric',
-            'permintaan' => 'required|numeric',
             'penjualan' => 'required|numeric',
             'kategori_stok' => 'required|in:Banyak,Sedikit,Sedang',
         ]);
@@ -67,7 +64,6 @@ class DataStokController extends Controller
             // Konversi koma ke titik untuk desimal
             $data = $request->all();
             $data['stok'] = $this->convertToDecimal($request->stok);
-            $data['permintaan'] = $this->convertToDecimal($request->permintaan);
             $data['penjualan'] = $this->convertToDecimal($request->penjualan);
 
             $dataStok = DataStok::findOrFail($id);
@@ -90,7 +86,7 @@ class DataStokController extends Controller
         try {
             $dataStok = DataStok::findOrFail($id);
             $dataStok->delete();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Data stok berhasil dihapus!'
@@ -151,12 +147,10 @@ class DataStokController extends Controller
                 if ($countKategori > 0) {
                     // Hitung mean untuk setiap atribut
                     $meanStok = $dataByKategori->avg('stok');
-                    $meanPermintaan = $dataByKategori->avg('permintaan');
                     $meanPenjualan = $dataByKategori->avg('penjualan');
 
                     // Hitung standard deviation
                     $stdStok = $this->calculateStdDev($dataByKategori->pluck('stok')->toArray(), $meanStok);
-                    $stdPermintaan = $this->calculateStdDev($dataByKategori->pluck('permintaan')->toArray(), $meanPermintaan);
                     $stdPenjualan = $this->calculateStdDev($dataByKategori->pluck('penjualan')->toArray(), $meanPenjualan);
 
                     // Simpan likelihood untuk semua data
@@ -165,10 +159,8 @@ class DataStokController extends Controller
                             'id_stok' => $data->id_stok,
                             'kategori' => $kat,
                             'stok_li' => $meanStok,
-                            'permintaan_li' => $meanPermintaan,
                             'penjualan_li' => $meanPenjualan,
                             'stok_std' => $stdStok,
-                            'permintaan_std' => $stdPermintaan,
                             'penjualan_std' => $stdPenjualan,
                         ]);
                     }
@@ -179,10 +171,8 @@ class DataStokController extends Controller
                             'id_stok' => $data->id_stok,
                             'kategori' => $kat,
                             'stok_li' => 0,
-                            'permintaan_li' => 0,
                             'penjualan_li' => 0,
                             'stok_std' => 1,
-                            'permintaan_std' => 1,
                             'penjualan_std' => 1,
                         ]);
                     }
@@ -195,13 +185,12 @@ class DataStokController extends Controller
                 'success' => true,
                 'message' => 'Training model berhasil! Data likelihood dan probabilitas telah dihitung.'
             ]);
-
         } catch (\Exception $e) {
             // // Hanya rollback jika transaction masih aktif
             // if (DB::transactionLevel() > 0) {
             //     DB::rollback();
             // }
-            
+
             \Log::error('Training error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
@@ -220,17 +209,25 @@ class DataStokController extends Controller
             $variance += pow($value - $mean, 2);
         }
         $variance /= ($count - 1);
-        
+
         return sqrt($variance);
     }
 
     private function gaussianProbability($x, $mean, $stdDev)
     {
-        if ($stdDev == 0) $stdDev = 1; // Avoid division by zero
+        if ($stdDev <= 0) {
+            $stdDev = 1;
+        }
 
-        $exponent = exp(-pow($x - $mean, 2) / (2 * pow($stdDev, 2)));
-        return (1 / (sqrt(2 * pi()) * $stdDev)) * $exponent;
+        $exponent = exp(
+            -pow(($x - $mean), 2)
+                / (2 * pow($stdDev, 2))
+        );
+
+        return (1 / (sqrt(2 * pi()) * $stdDev))
+            * $exponent;
     }
+
 
     public function exportPdf()
     {
@@ -249,10 +246,8 @@ class DataStokController extends Controller
                     'count' => $count,
                     'prior_probability' => $count / $dataStok->count(),
                     'mean_stok' => round($dataByKategori->avg('stok'), 2),
-                    'mean_permintaan' => round($dataByKategori->avg('permintaan'), 2),
                     'mean_penjualan' => round($dataByKategori->avg('penjualan'), 2),
                     'std_stok' => round($this->calculateStdDev($dataByKategori->pluck('stok')->toArray(), $dataByKategori->avg('stok')), 2),
-                    'std_permintaan' => round($this->calculateStdDev($dataByKategori->pluck('permintaan')->toArray(), $dataByKategori->avg('permintaan')), 2),
                     'std_penjualan' => round($this->calculateStdDev($dataByKategori->pluck('penjualan')->toArray(), $dataByKategori->avg('penjualan')), 2),
                 ];
             }
